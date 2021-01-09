@@ -1,6 +1,7 @@
 import sys
 import pygame
 from datetime import date
+import shelve # part of the standard library
 
 # Initializing
 pygame.init()
@@ -25,6 +26,9 @@ black = (0, 0, 0)
 
 # Load images
 boardRoom = pygame.image.load("Board Room.jpg")
+
+# Shelve Instance to save and load data
+SAVE_DATA = shelve.open("Save Data")
 
 
 # Function to create a button
@@ -99,7 +103,7 @@ def game_menu():
         loadCEOButtton = create_button((screen_width / 2) - 100, screen_height / 2, 200, 50, lightgrey, slategrey)
 
         if loadCEOButtton:
-            print("Load CEO button clicked.")
+            load_screen()
 
         # Load CEO button text
         screen.blit(loadCEOText, ((screen_width / 2) - (newCEOText.get_width() / 2), screen_height / 2))
@@ -116,6 +120,8 @@ def game_menu():
 def new_game():
     startText = font.render("The Corporate CEO", True, slategrey)
     newUserName = ""
+    userName = ""
+    careerChoice = ""
 
     # Used to make the text grey and white when active
     nameActive = False
@@ -128,6 +134,7 @@ def new_game():
     regionsTower = pygame.image.load("Regions Tower.jpg")
     petroTower = pygame.image.load("Petro Tower.jpg")
     beairdTower = pygame.image.load("Beaird Tower.jpg")
+    startYourDay = font.render("Start Your Day!", True, blackish)
 
     while True:
         screen.fill((0, 0, 0))
@@ -195,6 +202,7 @@ def new_game():
             pygame.draw.rect(screen, white, regionsBorder, 2)
             petroActive = False
             beairdActive = False
+            careerChoice = "Investment Co. CEO"
         else:
             investment = font.render("Investment Co.", True, slategrey)
             pygame.draw.rect(screen, black, regionsBorder, 2)
@@ -204,6 +212,7 @@ def new_game():
             pygame.draw.rect(screen, white, petroBorder, 2)
             regionsActive = False
             beairdActive = False
+            careerChoice = "Oil and Gas CEO"
         else:
             gasAndOil = font.render("Gas & Oil", True, slategrey)
             pygame.draw.rect(screen, black, petroBorder, 2)
@@ -213,6 +222,7 @@ def new_game():
             pygame.draw.rect(screen, white, beairdBorder, 2)
             regionsActive = False
             petroActive = False
+            careerChoice = "Real Estate CEO"
         else:
             realEstate = font.render("Real Estate", True, slategrey)
             pygame.draw.rect(screen, black, beairdBorder, 2)
@@ -231,6 +241,99 @@ def new_game():
 
         screen.blit(beairdTower, ((screen_width - beairdTower.get_width()) * .9, screen_height * .45))
         screen.blit(realEstate, ((screen_width - realEstate.get_width()) * .875, screen_height * .80))
+
+        submitButtton = create_button((screen_width / 2) - (startYourDay.get_width() / 2) - 5, screen_height * .9,
+                                      startYourDay.get_width() + 10, startYourDay.get_height(), lightgrey, slategrey)
+
+        screen.blit(startYourDay, ((screen_width / 2) - (startYourDay.get_width() / 2), int(screen_height * .9)))
+
+        if submitButtton:
+            if newUserName != "":
+                userName = newUserName
+                SAVE_DATA['user_name'] = userName
+            else:
+                print("Need to program user warning.")
+            SAVE_DATA['career_choice'] = careerChoice
+            SAVE_DATA.close()
+            first_screen(userName, careerChoice)
+
+        pygame.display.update()
+        clock.tick(15)
+
+
+def load_screen():
+    # Declare Variables
+    SAVE_DATA = shelve.open("Save Data")
+    startText = font.render("The Corporate CEO", True, slategrey)
+    try:
+        userName = SAVE_DATA['user_name']
+        careerChoice = SAVE_DATA['career_choice']
+    except KeyError:
+        userName = "No CEO Name Saved"
+        careerChoice = "No Career Choice Saved"
+    SAVE_DATA.close()
+    profileActive = False
+    startYourDay = font.render("Start Your Day!", True, blackish)
+
+    profileBorder = pygame.Rect(15, 60, 300, 100)
+
+    while True:
+        screen.fill((0, 0, 0))
+        screen.blit(startText, ((screen_width - startText.get_width()) / 2, 0))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if profileBorder.collidepoint(event.pos):
+                    profileActive = True
+                else:
+                    profileActive = False
+
+        if profileActive:
+            welcomeName = font.render(userName, True, white)
+            welcomeCareer = font.render(careerChoice, True, white)
+            pygame.draw.rect(screen, white, profileBorder, 2)
+        else:
+            welcomeName = font.render(userName, True, slategrey)
+            welcomeCareer = font.render(careerChoice, True, slategrey)
+            pygame.draw.rect(screen, black, profileBorder, 2)
+
+        screen.blit(welcomeName, (20, 60))
+        screen.blit(welcomeCareer, (20, welcomeName.get_height() + 60))
+
+        submitButtton = create_button((screen_width / 2) - (startYourDay.get_width() / 2) - 5, screen_height * .9,
+                                      startYourDay.get_width() + 10, startYourDay.get_height(), lightgrey, slategrey)
+
+        screen.blit(startYourDay, ((screen_width / 2) - (startYourDay.get_width() / 2), int(screen_height * .9)))
+
+        if submitButtton:
+            first_screen(userName, careerChoice)
+
+        pygame.display.update()
+        clock.tick(15)
+
+
+def first_screen(userName, careerChoice):
+    startText = font.render("The Corporate CEO", True, slategrey)
+
+    # Declare Variables
+    welcomeName = font.render("Hello, " + userName + ".", True, slategrey)
+    welcomeCareer = font.render("It's a great day to be a " + careerChoice + ".", True, slategrey)
+
+    while True:
+        screen.fill((0, 0, 0))
+        screen.blit(startText, ((screen_width - startText.get_width()) / 2, 0))
+
+        screen.blit(welcomeName, (20, 40))
+        screen.blit(welcomeCareer, (20, welcomeName.get_height() + 40))
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
 
         pygame.display.update()
         clock.tick(15)
